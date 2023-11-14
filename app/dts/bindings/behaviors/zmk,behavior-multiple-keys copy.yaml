@@ -1,0 +1,13 @@
+# Copyright (c) 2022 The ZMK Contributors
+# SPDX-License-Identifier: MIT
+
+description: Multiple Keys Behavior
+
+compatible: 'zmk,behavior-multiple-keys'
+
+include: zero_param.yaml
+
+properties:
+  bindings:
+    type: phandle-array
+    required: true

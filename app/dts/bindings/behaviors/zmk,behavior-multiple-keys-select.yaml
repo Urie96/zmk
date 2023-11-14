@@ -1,0 +1,8 @@
+# Copyright (c) 2022 The ZMK Contributors
+# SPDX-License-Identifier: MIT
+
+description: Multiple Keys Select Behavior
+
+compatible: 'zmk,behavior-multiple-keys-select'
+
+include: one_param.yaml
