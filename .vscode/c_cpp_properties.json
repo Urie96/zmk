@@ -1,0 +1,21 @@
+{
+  "configurations": [
+    {
+      "name": "Linux",
+      "includePath": [
+        "${workspaceFolder}/app/include/**",
+        "${workspaceFolder}/../zephyr/include",
+        "/usr/include"
+      ],
+      "defines": [],
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "c17",
+      "cppStandard": "c++17",
+      "intelliSenseMode": "linux-gcc-x86",
+      "forcedInclude": [
+        "${workspaceFolder}/vscode.h"
+      ]
+    }
+  ],
+  "version": 4
+}
