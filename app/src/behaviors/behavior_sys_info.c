@@ -43,12 +43,16 @@ static inline void tap_number(uint8_t num) {
     }
 }
 
+uint8_t get_peripheral_battery_level(void);
+uint8_t get_battery_level(void);
+
 static int on_sys_info_binding_pressed(struct zmk_behavior_binding *binding,
                                        struct zmk_behavior_binding_event event) {
-    int battery_level = bt_bas_get_battery_level();
-    tap_number(battery_level);
-
+    tap_number(get_battery_level());
     tap_key(SPACE);
+    tap_number(get_peripheral_battery_level());
+    tap_key(SPACE);
+
     struct zmk_endpoint_instance edp = zmk_endpoints_selected();
     tap_number(edp.ble.profile_index + 1);
     return ZMK_BEHAVIOR_OPAQUE;

@@ -25,6 +25,9 @@ const uint8_t NULL_BATTERY_LEVEL = 0xFF;
 static uint8_t last_state_of_charge = NULL_BATTERY_LEVEL;
 static uint8_t last_state_of_peripheral_charge = NULL_BATTERY_LEVEL;
 
+uint8_t get_peripheral_battery_level(void) { return last_state_of_peripheral_charge; }
+uint8_t get_battery_level(void) { return last_state_of_charge; }
+
 static void blvl_ccc_cfg_changed(const struct bt_gatt_attr *attr, uint16_t value) {
     ARG_UNUSED(attr);
 
@@ -40,7 +43,7 @@ static ssize_t read_blvl(struct bt_conn *conn, const struct bt_gatt_attr *attr, 
 }
 
 BT_GATT_SERVICE_DEFINE(
-    bas, BT_GATT_PRIMARY_SERVICE(BT_UUID_BAS),
+    battery_service, BT_GATT_PRIMARY_SERVICE(BT_UUID_BAS),
     BT_GATT_CHARACTERISTIC(BT_UUID_BAS_BATTERY_LEVEL, BT_GATT_CHRC_READ | BT_GATT_CHRC_NOTIFY,
                            BT_GATT_PERM_READ, read_blvl, NULL, &last_state_of_charge),
     BT_GATT_CCC(blvl_ccc_cfg_changed, BT_GATT_PERM_READ | BT_GATT_PERM_WRITE),
@@ -62,7 +65,7 @@ int peripheral_batt_lvl_listener(const zmk_event_t *eh) {
     last_state_of_peripheral_charge = ev->state_of_charge;
 
     // TODO: super fragile because of hardcoded attribute index
-    int rc = bt_gatt_notify(NULL, &bas.attrs[5], &last_state_of_peripheral_charge,
+    int rc = bt_gatt_notify(NULL, &battery_service.attrs[5], &last_state_of_peripheral_charge,
                             sizeof(last_state_of_peripheral_charge));
     return rc;
 };
@@ -94,7 +97,7 @@ static int zmk_battery_update(const struct device *battery) {
 
         LOG_DBG("Setting BAS GATT battery level to %d.", last_state_of_charge);
 
-        rc = bt_gatt_notify(NULL, &bas.attrs[1], &last_state_of_charge,
+        rc = bt_gatt_notify(NULL, &battery_service.attrs[1], &last_state_of_charge,
                             sizeof(last_state_of_charge));
         if (rc != 0 && rc != -ENOTCONN) {
             LOG_WRN("Failed to set BAS GATT battery level (err %d)", rc);
