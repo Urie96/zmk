@@ -3,7 +3,7 @@
 
 description: Tap Dance Behavior
 
-compatible: "zmk,behavior-tap-dance"
+compatible: 'zmk,behavior-tap-dance'
 
 include: zero_param.yaml
 
@@ -14,3 +14,5 @@ properties:
   tapping-term-ms:
     type: int
     default: 200
+  no-delay:
+    type: boolean

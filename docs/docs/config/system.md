@@ -13,13 +13,12 @@ Definition file: [zmk/app/Kconfig](https://github.com/zmkfirmware/zmk/blob/main/
 
 ### General
 
-| Config                               | Type   | Description                                                                   | Default |
-| ------------------------------------ | ------ | ----------------------------------------------------------------------------- | ------- |
-| `CONFIG_ZMK_KEYBOARD_NAME`           | string | The name of the keyboard (max 16 characters)                                  |         |
-| `CONFIG_ZMK_SETTINGS_SAVE_DEBOUNCE`  | int    | Milliseconds to wait after a setting change before writing it to flash memory | 60000   |
-| `CONFIG_ZMK_WPM`                     | bool   | Enable calculating words per minute                                           | n       |
-| `CONFIG_HEAP_MEM_POOL_SIZE`          | int    | Size of the heap memory pool                                                  | 8192    |
-| `CONFIG_ZMK_BATTERY_REPORT_INTERVAL` | int    | Battery level report interval in seconds                                      | 60      |
+| Config                              | Type   | Description                                                                   | Default |
+| ----------------------------------- | ------ | ----------------------------------------------------------------------------- | ------- |
+| `CONFIG_ZMK_KEYBOARD_NAME`          | string | The name of the keyboard (max 16 characters)                                  |         |
+| `CONFIG_ZMK_SETTINGS_SAVE_DEBOUNCE` | int    | Milliseconds to wait after a setting change before writing it to flash memory | 60000   |
+| `CONFIG_ZMK_WPM`                    | bool   | Enable calculating words per minute                                           | n       |
+| `CONFIG_HEAP_MEM_POOL_SIZE`         | int    | Size of the heap memory pool                                                  | 8192    |
 
 ### HID
 
@@ -97,8 +96,8 @@ Following split keyboard settings are defined in [zmk/app/src/split/Kconfig](htt
 | `CONFIG_ZMK_SPLIT_BLE`                                | bool | Use BLE to communicate between split keyboard halves                    | y       |
 | `CONFIG_ZMK_SPLIT_ROLE_CENTRAL`                       | bool | `y` for central device, `n` for peripheral                              |         |
 | `CONFIG_ZMK_SPLIT_BLE_CENTRAL_POSITION_QUEUE_SIZE`    | int  | Max number of key state events to queue when received from peripherals  | 5       |
-| `CONFIG_ZMK_BLE_SPLIT_CENTRAL_SPLIT_RUN_STACK_SIZE`   | int  | Stack size of the BLE split central write thread                        | 512     |
-| `CONFIG_ZMK_BLE_SPLIT_CENTRAL_SPLIT_RUN_QUEUE_SIZE`   | int  | Max number of behavior run events to queue to send to the peripheral(s) | 5       |
+| `CONFIG_ZMK_SPLIT_BLE_CENTRAL_SPLIT_RUN_STACK_SIZE`   | int  | Stack size of the BLE split central write thread                        | 512     |
+| `CONFIG_ZMK_SPLIT_BLE_CENTRAL_SPLIT_RUN_QUEUE_SIZE`   | int  | Max number of behavior run events to queue to send to the peripheral(s) | 5       |
 | `CONFIG_ZMK_SPLIT_BLE_PERIPHERAL_STACK_SIZE`          | int  | Stack size of the BLE split peripheral notify thread                    | 650     |
 | `CONFIG_ZMK_SPLIT_BLE_PERIPHERAL_PRIORITY`            | int  | Priority of the BLE split peripheral notify thread                      | 5       |
 | `CONFIG_ZMK_SPLIT_BLE_PERIPHERAL_POSITION_QUEUE_SIZE` | int  | Max number of key state events to queue to send to the central          | 10      |

@@ -6,8 +6,6 @@ menuconfig ZMK_DISPLAY
     default n
     select DISPLAY
     select LVGL
-    select LV_THEMES
-    select LV_THEME_MONO
     select LV_CONF_MINIMAL
 
 if ZMK_DISPLAY
@@ -15,6 +13,13 @@ if ZMK_DISPLAY
 config ZMK_DISPLAY_BLANK_ON_IDLE
     bool "Blank display on idle"
     default y if SSD1306
+
+if LV_USE_THEME_MONO
+
+config ZMK_DISPLAY_INVERT
+    bool "Invert display colors"
+
+endif
 
 choice LV_TXT_ENC
     default LV_TXT_ENC_UTF8
@@ -36,6 +41,11 @@ choice ZMK_DISPLAY_STATUS_SCREEN
 config ZMK_DISPLAY_STATUS_SCREEN_BUILT_IN
     bool "Built in status screen"
     select LV_OBJ_LABEL
+    imply LV_USE_THEME_MONO
+    imply ZMK_WIDGET_LAYER_STATUS
+    imply ZMK_WIDGET_BATTERY_STATUS
+    imply ZMK_WIDGET_OUTPUT_STATUS
+    imply ZMK_WIDGET_PERIPHERAL_STATUS
 
 config ZMK_DISPLAY_STATUS_SCREEN_CUSTOM
     bool "Custom status screen"

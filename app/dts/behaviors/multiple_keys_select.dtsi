@@ -1,0 +1,9 @@
+/ {
+    behaviors {
+        /omit-if-no-ref/ ms: behavior_multiple_keys_select {
+            compatible = "zmk,behavior-multiple-keys-select";
+            label = "MS";
+            #binding-cells = <1>;
+        };
+    };
+};

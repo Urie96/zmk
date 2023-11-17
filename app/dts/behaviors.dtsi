@@ -19,3 +19,5 @@
 #include <behaviors/key_repeat.dtsi>
 #include <behaviors/backlight.dtsi>
 #include <behaviors/macros.dtsi>
+#include <behaviors/multiple_keys_select.dtsi>
+#include <behaviors/sys_info.dtsi>
