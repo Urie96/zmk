@@ -43,7 +43,12 @@ void draw_battery(lv_obj_t *canvas, const struct status_state *state) {
     sprintf(text, "%i%%", state->battery);
     lv_draw_label_dsc_t label_dsc;
     init_label_dsc(&label_dsc, LVGL_FOREGROUND, &lv_font_montserrat_16, LV_TEXT_ALIGN_CENTER);
-    lv_canvas_draw_text(canvas, 0, 5, 68, &label_dsc, text);
+    lv_canvas_draw_text(canvas, 0, 0, 68, &label_dsc, text);
+    if (state->peripheral_battery > 0 && state->peripheral_battery <= 100) {
+        char text[4] = {};
+        sprintf(text, "%i%%", state->peripheral_battery);
+        lv_canvas_draw_text(canvas, 0, 20, 68, &label_dsc, text);
+    }
     if (state->charging) {
         lv_draw_img_dsc_t img_dsc;
         lv_draw_img_dsc_init(&img_dsc);

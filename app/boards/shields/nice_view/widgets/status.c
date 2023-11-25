@@ -26,6 +26,8 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #include <zmk/keymap.h>
 #include <zmk/wpm.h>
 
+uint8_t get_peripheral_battery_level(void);
+
 static sys_slist_t widgets = SYS_SLIST_STATIC_INIT(&widgets);
 
 struct output_status_state {
@@ -86,7 +88,7 @@ static void draw_top(lv_obj_t *widget, lv_color_t cbuf[], const struct status_st
 
     lv_canvas_draw_text(canvas, 0, 0, CANVAS_SIZE, &label_dsc, output_text);
 
-#if !IS_ENABLED(CONFIG_NICE_VIEW_BATTERY_SHOW_BIG_PERCENTAGE)
+#if !IS_ENABLED(CONFIG_NICE_VIEW_DISABLE_WPM)
     // Draw WPM
     lv_canvas_draw_rect(canvas, 0, 21, 68, 42, &rect_white_dsc);
     lv_canvas_draw_rect(canvas, 1, 22, 66, 40, &rect_black_dsc);
@@ -202,6 +204,7 @@ static void set_battery_status(struct zmk_widget_status *widget,
 #endif /* IS_ENABLED(CONFIG_USB_DEVICE_STACK) */
 
     widget->state.battery = state.level;
+    widget->state.peripheral_battery = get_peripheral_battery_level();
 
     draw_top(widget->obj, widget->cbuf, &widget->state);
 }
@@ -224,6 +227,7 @@ ZMK_DISPLAY_WIDGET_LISTENER(widget_battery_status, struct battery_status_state,
                             battery_status_update_cb, battery_status_get_state)
 
 ZMK_SUBSCRIPTION(widget_battery_status, zmk_battery_state_changed);
+ZMK_SUBSCRIPTION(widget_battery_status, zmk_peripheral_battery_state_changed);
 #if IS_ENABLED(CONFIG_USB_DEVICE_STACK)
 ZMK_SUBSCRIPTION(widget_battery_status, zmk_usb_conn_state_changed);
 #endif /* IS_ENABLED(CONFIG_USB_DEVICE_STACK) */
@@ -234,6 +238,7 @@ static void set_output_status(struct zmk_widget_status *widget,
     widget->state.active_profile_index = state->active_profile_index;
     widget->state.active_profile_connected = state->active_profile_connected;
     widget->state.active_profile_bonded = state->active_profile_bonded;
+    widget->state.peripheral_battery = get_peripheral_battery_level();
 
     draw_top(widget->obj, widget->cbuf, &widget->state);
     draw_middle(widget->obj, widget->cbuf2, &widget->state);
@@ -286,6 +291,7 @@ ZMK_DISPLAY_WIDGET_LISTENER(widget_layer_status, struct layer_status_state, laye
 
 ZMK_SUBSCRIPTION(widget_layer_status, zmk_layer_state_changed);
 
+#if !IS_ENABLED(CONFIG_NICE_VIEW_DISABLE_WPM)
 static void set_wpm_status(struct zmk_widget_status *widget, struct wpm_status_state state) {
     for (int i = 0; i < 9; i++) {
         widget->state.wpm[i] = widget->state.wpm[i + 1];
@@ -307,6 +313,7 @@ struct wpm_status_state wpm_status_get_state(const zmk_event_t *eh) {
 ZMK_DISPLAY_WIDGET_LISTENER(widget_wpm_status, struct wpm_status_state, wpm_status_update_cb,
                             wpm_status_get_state)
 ZMK_SUBSCRIPTION(widget_wpm_status, zmk_wpm_state_changed);
+#endif
 
 int zmk_widget_status_init(struct zmk_widget_status *widget, lv_obj_t *parent) {
     widget->obj = lv_obj_create(parent);
@@ -325,8 +332,10 @@ int zmk_widget_status_init(struct zmk_widget_status *widget, lv_obj_t *parent) {
     widget_battery_status_init();
     widget_output_status_init();
     widget_layer_status_init();
-    widget_wpm_status_init();
 
+#if !IS_ENABLED(CONFIG_NICE_VIEW_DISABLE_WPM)
+    widget_wpm_status_init();
+#endif
     return 0;
 }
 
