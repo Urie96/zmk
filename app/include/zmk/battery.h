@@ -7,3 +7,5 @@
 #pragma once
 
 uint8_t zmk_battery_state_of_charge();
+
+uint8_t zmk_battery_state_of_peripheral_charge(); // only central side has

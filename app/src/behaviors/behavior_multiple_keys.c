@@ -21,12 +21,12 @@ struct behavior_multiple_keys_config {
     struct zmk_behavior_binding *behaviors;
 };
 
-extern uint32_t multiple_keys_index_selected;
+uint32_t get_multiple_keys_index_selected();
 
 static inline int handle_multiple_keys_binding_event(struct zmk_behavior_binding *binding,
                                                      struct zmk_behavior_binding_event event,
                                                      bool pressed) {
-    uint32_t index = multiple_keys_index_selected;
+    uint32_t index = get_multiple_keys_index_selected();
 
     const struct device *dev = device_get_binding(binding->behavior_dev);
     const struct behavior_multiple_keys_config *cfg = dev->config;

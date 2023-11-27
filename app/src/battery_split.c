@@ -25,9 +25,6 @@ const uint8_t NULL_BATTERY_LEVEL = 0xFF;
 static uint8_t last_state_of_charge = NULL_BATTERY_LEVEL;
 static uint8_t last_state_of_peripheral_charge = NULL_BATTERY_LEVEL;
 
-uint8_t get_peripheral_battery_level(void) { return last_state_of_peripheral_charge; }
-uint8_t get_battery_level(void) { return last_state_of_charge; }
-
 static void blvl_ccc_cfg_changed(const struct bt_gatt_attr *attr, uint16_t value) {
     ARG_UNUSED(attr);
 
@@ -74,6 +71,7 @@ ZMK_LISTENER(peripheral_batt_lvl_listener, peripheral_batt_lvl_listener);
 ZMK_SUBSCRIPTION(peripheral_batt_lvl_listener, zmk_peripheral_battery_state_changed);
 
 uint8_t zmk_battery_state_of_charge() { return last_state_of_charge; }
+uint8_t zmk_battery_state_of_peripheral_charge() { return last_state_of_peripheral_charge; }
 
 static int zmk_battery_update(const struct device *battery) {
     struct sensor_value state_of_charge;

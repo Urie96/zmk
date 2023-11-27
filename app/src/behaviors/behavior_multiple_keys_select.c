@@ -14,7 +14,9 @@
 
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
-uint32_t multiple_keys_index_selected = 0;
+static uint32_t multiple_keys_index_selected = 0;
+
+uint32_t get_multiple_keys_index_selected() { return multiple_keys_index_selected; }
 
 #if DT_HAS_COMPAT_STATUS_OKAY(DT_DRV_COMPAT)
 

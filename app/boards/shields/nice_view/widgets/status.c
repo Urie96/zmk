@@ -25,8 +25,7 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #include <zmk/endpoints.h>
 #include <zmk/keymap.h>
 #include <zmk/wpm.h>
-
-uint8_t get_peripheral_battery_level(void);
+#include <zmk/battery.h>
 
 static sys_slist_t widgets = SYS_SLIST_STATIC_INIT(&widgets);
 
@@ -45,6 +44,18 @@ struct layer_status_state {
 struct wpm_status_state {
     uint8_t wpm;
 };
+
+uint32_t get_multiple_keys_index_selected();
+
+static void draw_custom(lv_obj_t *canvas) {
+    char text[10] = {};
+    sprintf(text, "c: %i%%", zmk_battery_state_of_charge());
+    lv_draw_label_dsc_t label_dsc;
+    init_label_dsc(&label_dsc, LVGL_FOREGROUND, &lv_font_montserrat_16, LV_TEXT_ALIGN_LEFT);
+    lv_canvas_draw_text(canvas, 2, 20, CANVAS_SIZE, &label_dsc, text);
+    sprintf(text, "p: %i%%", zmk_battery_state_of_peripheral_charge());
+    lv_canvas_draw_text(canvas, 2, 40, CANVAS_SIZE, &label_dsc, text);
+}
 
 static void draw_top(lv_obj_t *widget, lv_color_t cbuf[], const struct status_state *state) {
     lv_obj_t *canvas = lv_obj_get_child(widget, 0);
@@ -65,6 +76,8 @@ static void draw_top(lv_obj_t *widget, lv_color_t cbuf[], const struct status_st
 
     // Draw battery
     draw_battery(canvas, state);
+
+    draw_custom(canvas);
 
     // Draw output status
     char output_text[10] = {};
@@ -203,8 +216,8 @@ static void set_battery_status(struct zmk_widget_status *widget,
     widget->state.charging = state.usb_present;
 #endif /* IS_ENABLED(CONFIG_USB_DEVICE_STACK) */
 
-    widget->state.battery = state.level;
-    widget->state.peripheral_battery = get_peripheral_battery_level();
+    widget->state.battery = zmk_battery_state_of_charge();
+    widget->state.peripheral_battery = zmk_battery_state_of_peripheral_charge();
 
     draw_top(widget->obj, widget->cbuf, &widget->state);
 }
@@ -238,7 +251,8 @@ static void set_output_status(struct zmk_widget_status *widget,
     widget->state.active_profile_index = state->active_profile_index;
     widget->state.active_profile_connected = state->active_profile_connected;
     widget->state.active_profile_bonded = state->active_profile_bonded;
-    widget->state.peripheral_battery = get_peripheral_battery_level();
+    widget->state.peripheral_battery = zmk_battery_state_of_peripheral_charge();
+    widget->state.battery = zmk_battery_state_of_charge();
 
     draw_top(widget->obj, widget->cbuf, &widget->state);
     draw_middle(widget->obj, widget->cbuf2, &widget->state);
