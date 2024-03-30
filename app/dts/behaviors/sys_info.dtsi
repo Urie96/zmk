@@ -1,0 +1,8 @@
+/ {
+    behaviors {
+        /omit-if-no-ref/ sys_info: behavior_sys_info {
+            compatible = "zmk,behavior-sys-info";
+            #binding-cells = <0>;
+        };
+    };
+};
