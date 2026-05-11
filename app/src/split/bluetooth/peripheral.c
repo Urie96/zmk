@@ -20,6 +20,9 @@
 #include <zephyr/bluetooth/gatt.h>
 #include <zephyr/bluetooth/hci_types.h>
 
+#include "peripheral.h"
+#include "service.h"
+
 #if IS_ENABLED(CONFIG_SETTINGS)
 
 #include <zephyr/settings/settings.h>
@@ -70,6 +73,7 @@ static int start_advertising(bool low_duty) {
 };
 
 static bool low_duty_advertising = false;
+static bool enabled = false;
 
 static void advertising_cb(struct k_work *work) {
     const int err = start_advertising(low_duty_advertising);
@@ -86,7 +90,7 @@ static void connected(struct bt_conn *conn, uint8_t err) {
     raise_zmk_split_peripheral_status_changed(
         (struct zmk_split_peripheral_status_changed){.connected = is_connected});
 
-    if (err == BT_HCI_ERR_ADV_TIMEOUT) {
+    if (err == BT_HCI_ERR_ADV_TIMEOUT && enabled) {
         low_duty_advertising = true;
         k_work_submit(&advertising_work);
     }
@@ -104,8 +108,10 @@ static void disconnected(struct bt_conn *conn, uint8_t reason) {
     raise_zmk_split_peripheral_status_changed(
         (struct zmk_split_peripheral_status_changed){.connected = is_connected});
 
-    low_duty_advertising = false;
-    k_work_submit(&advertising_work);
+    if (enabled) {
+        low_duty_advertising = false;
+        k_work_submit(&advertising_work);
+    }
 }
 
 static void security_changed(struct bt_conn *conn, bt_security_t level, enum bt_security_err err) {
@@ -146,21 +152,86 @@ bool zmk_split_bt_peripheral_is_connected(void) { return is_connected; }
 
 bool zmk_split_bt_peripheral_is_bonded(void) { return is_bonded; }
 
-static int zmk_peripheral_ble_init(void) {
-    int err = bt_enable(NULL);
+static zmk_split_transport_peripheral_status_changed_cb_t transport_status_cb;
 
-    if (err) {
-        LOG_ERR("BLUETOOTH FAILED (%d)", err);
-        return err;
+static int
+split_peripheral_bt_set_status_callback(zmk_split_transport_peripheral_status_changed_cb_t cb) {
+    transport_status_cb = cb;
+    return 0;
+}
+
+static void find_first_conn(struct bt_conn *conn, void *data) {
+    struct bt_conn **cp = (struct bt_conn **)data;
+
+    *cp = conn;
+}
+
+static int split_peripheral_bt_set_enabled(bool en) {
+    int err;
+
+    enabled = en;
+    if (en) {
+        k_work_submit(&advertising_work);
+        return 0;
+    } else {
+        struct bt_conn *conn = NULL;
+        bt_conn_foreach(BT_CONN_TYPE_LE, find_first_conn, &conn);
+        if (conn) {
+            err = bt_conn_disconnect(conn, BT_HCI_ERR_REMOTE_USER_TERM_CONN);
+            if (err < 0) {
+                LOG_WRN("Failed to disconnect connection to central (%d)", err);
+            }
+        }
+
+        err = bt_le_adv_stop();
+
+        if (err < 0) {
+            LOG_WRN("Failed to stop advertising (%d)", err);
+        }
+
+        return 0;
     }
+}
 
-#if IS_ENABLED(CONFIG_SETTINGS)
-    settings_subsys_init();
+static void notify_transport_status(void);
 
-    settings_load_subtree("ble");
-    settings_load_subtree("bt");
-#endif
+static void notify_status_work_cb(struct k_work *_work) { notify_transport_status(); }
 
+static K_WORK_DEFINE(notify_status_work, notify_status_work_cb);
+
+static bool settings_loaded = false;
+
+static struct zmk_split_transport_status split_peripheral_bt_get_status(void) {
+    return (struct zmk_split_transport_status){
+        .available = !IS_ENABLED(CONFIG_ZMK_BLE_CLEAR_BONDS_ON_START) && settings_loaded,
+        .enabled = enabled,
+        .connections = zmk_split_bt_peripheral_is_connected()
+                           ? ZMK_SPLIT_TRANSPORT_CONNECTIONS_STATUS_ALL_CONNECTED
+                           : ZMK_SPLIT_TRANSPORT_CONNECTIONS_STATUS_DISCONNECTED,
+    };
+}
+
+static const struct zmk_split_transport_peripheral_api peripheral_api = {
+    .report_event = zmk_split_transport_peripheral_bt_report_event,
+    .set_enabled = split_peripheral_bt_set_enabled,
+    .set_status_callback = split_peripheral_bt_set_status_callback,
+    .get_status = split_peripheral_bt_get_status,
+};
+
+ZMK_SPLIT_TRANSPORT_PERIPHERAL_REGISTER(bt_peripheral, &peripheral_api,
+                                        CONFIG_ZMK_SPLIT_BLE_PRIORITY);
+
+struct zmk_split_transport_peripheral *zmk_split_transport_peripheral_bt(void) {
+    return &bt_peripheral;
+}
+
+static void notify_transport_status(void) {
+    if (transport_status_cb) {
+        transport_status_cb(&bt_peripheral, split_peripheral_bt_get_status());
+    }
+}
+
+static int zmk_peripheral_ble_complete_startup(void) {
 #if IS_ENABLED(CONFIG_ZMK_BLE_CLEAR_BONDS_ON_START)
     LOG_WRN("Clearing all existing BLE bond information from the keyboard");
 
@@ -170,7 +241,40 @@ static int zmk_peripheral_ble_init(void) {
     bt_conn_auth_info_cb_register(&zmk_peripheral_ble_auth_info_cb);
 
     low_duty_advertising = false;
-    k_work_submit(&advertising_work);
+
+    settings_loaded = true;
+    k_work_submit(&notify_status_work);
+#endif
+
+    return 0;
+}
+
+#if IS_ENABLED(CONFIG_SETTINGS)
+
+static int peripheral_ble_handle_set(const char *name, size_t len, settings_read_cb read_cb,
+                                     void *cb_arg) {
+    return 0;
+}
+
+static struct settings_handler ble_peripheral_settings_handler = {
+    .name = "ble_peripheral",
+    .h_set = peripheral_ble_handle_set,
+    .h_commit = zmk_peripheral_ble_complete_startup};
+
+#endif // IS_ENABLED(CONFIG_SETTINGS)
+
+static int zmk_peripheral_ble_init(void) {
+    int err = bt_enable(NULL);
+
+    if (err) {
+        LOG_ERR("BLUETOOTH FAILED (%d)", err);
+        return err;
+    }
+
+#if IS_ENABLED(CONFIG_SETTINGS)
+    settings_register(&ble_peripheral_settings_handler);
+#else
+    zmk_peripheral_ble_complete_startup();
 #endif
 
     return 0;

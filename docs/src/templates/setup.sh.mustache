@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Copyright (c) 2020 The ZMK Contributors
 # SPDX-License-Identifier: MIT
@@ -297,7 +297,7 @@ if [ -n "$github_repo" ]; then
         exit 1
     fi
 
-    # TODO: Support determing the actions URL when non-https:// repo URL is used.
+    # TODO: Support determining the actions URL when non-https:// repo URL is used.
     if [ "${github_repo}" != "${github_repo#https://}" ]; then
         echo "Your firmware should be available from GitHub Actions shortly: ${github_repo%.git}/actions"
     fi

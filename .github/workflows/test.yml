@@ -4,12 +4,14 @@ on:
   push:
     paths:
       - ".github/workflows/test.yml"
+      - "app/run-test.sh"
       - "app/tests/**"
       - "app/src/**"
       - "app/include/**"
   pull_request:
     paths:
       - ".github/workflows/test.yml"
+      - "app/run-test.sh"
       - "app/tests/**"
       - "app/src/**"
       - "app/include/**"
@@ -59,7 +61,7 @@ jobs:
       - name: Initialize workspace (west init)
         run: west init -l app
       - name: Update modules (west update)
-        run: west update
+        run: west update --fetch-opt=--filter=tree:0
       - name: Export Zephyr CMake package (west zephyr-export)
         run: west zephyr-export
       - name: Test ${{ matrix.test }}
